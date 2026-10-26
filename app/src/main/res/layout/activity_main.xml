@@ -5,155 +5,171 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F5F7FA"
-    android:padding="20dp">
+    android:background="#F5F7FA">
 
-    <!-- App Title -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Smart Pantry Manager"
-        android:textSize="26sp"
-        android:textStyle="bold"
-        android:textColor="#1B5E20"
-        android:gravity="center"
-        android:layout_marginBottom="6dp" />
+        android:orientation="vertical"
+        android:background="#2E7D32"
+        android:padding="14dp">
 
-    <!-- App Description -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Manage your food and reduce waste"
-        android:textSize="14sp"
-        android:textColor="#607D8B"
-        android:gravity="center"
-        android:layout_marginBottom="20dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Smart Pantry Manager"
+            android:textSize="23sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:gravity="center" />
 
-    <!-- Pantry Summary -->
-    <TextView
-        android:id="@+id/textPantrySummary"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Total Items: 0"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:textColor="#1B5E20"
-        android:background="#E8F5E9"
-        android:padding="16dp"
-        android:layout_marginBottom="18dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Manage food • Track expiry • Reduce waste"
+            android:textSize="12sp"
+            android:textColor="#E8F5E9"
+            android:gravity="center"
+            android:layout_marginTop="4dp" />
+    </LinearLayout>
 
-    <!-- Add Food Heading -->
-    <TextView
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Add Food Item"
-        android:textSize="19sp"
-        android:textStyle="bold"
-        android:textColor="#263238"
-        android:layout_marginBottom="8dp" />
+        android:layout_height="match_parent"
+        android:fillViewport="true">
 
-    <!-- Food Name -->
-    <EditText
-        android:id="@+id/editItemName"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter food name"
-        android:inputType="textCapWords"
-        android:singleLine="true"
-        android:minHeight="48dp"
-        android:layout_marginBottom="8dp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
 
-    <!-- Quantity -->
-    <EditText
-        android:id="@+id/editQuantity"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Enter quantity"
-        android:inputType="number"
-        android:singleLine="true"
-        android:minHeight="48dp"
-        android:layout_marginBottom="8dp" />
+            <TextView
+                android:id="@+id/textPantrySummary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Total Items: 0"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:textColor="#1B5E20"
+                android:background="#E8F5E9"
+                android:padding="14dp"
+                android:layout_marginBottom="16dp" />
 
-    <!-- Expiry Date -->
-    <EditText
-        android:id="@+id/editExpiryDate"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Select expiry date"
-        android:focusable="false"
-        android:clickable="true"
-        android:inputType="date"
-        android:minHeight="48dp"
-        android:layout_marginBottom="12dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Add Food Item"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:textColor="#263238"
+                android:layout_marginBottom="8dp" />
 
-    <!-- Add Food Button -->
-    <Button
-        android:id="@+id/btnAddItem"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="ADD FOOD ITEM"
-        android:backgroundTint="#2E7D32"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="18dp" />
+            <EditText
+                android:id="@+id/editItemName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Food name"
+                android:inputType="textCapWords"
+                android:singleLine="true"
+                android:minHeight="48dp" />
 
-    <!-- My Pantry Heading -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="My Pantry"
-        android:textSize="19sp"
-        android:textStyle="bold"
-        android:textColor="#263238"
-        android:layout_marginBottom="6dp" />
+            <EditText
+                android:id="@+id/editQuantity"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Quantity"
+                android:inputType="number"
+                android:singleLine="true"
+                android:minHeight="48dp" />
 
-    <!-- Search Food -->
-    <EditText
-        android:id="@+id/editSearch"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Search food items..."
-        android:inputType="text"
-        android:singleLine="true"
-        android:minHeight="48dp"
-        android:layout_marginBottom="10dp" />
+            <EditText
+                android:id="@+id/editExpiryDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Select expiry date"
+                android:focusable="false"
+                android:clickable="true"
+                android:inputType="date"
+                android:minHeight="48dp"
+                android:layout_marginBottom="10dp" />
 
-    <!-- Sort Food Items -->
-    <Spinner
-        android:id="@+id/spinnerSort"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:contentDescription="Sort food items"
-        android:layout_marginBottom="8dp" />
+            <Button
+                android:id="@+id/btnAddItem"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ADD FOOD ITEM"
+                android:backgroundTint="#2E7D32"
+                android:textColor="#FFFFFF"
+                android:layout_marginBottom="20dp" />
 
-    <!-- Filter Food by Expiry Status -->
-    <Spinner
-        android:id="@+id/spinnerFilter"
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
-        android:contentDescription="Filter food by expiry status"
-        android:layout_marginBottom="10dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="My Pantry"
+                android:textSize="19sp"
+                android:textStyle="bold"
+                android:textColor="#263238"
+                android:layout_marginBottom="8dp" />
 
-    <!-- Empty Pantry Message -->
-    <TextView
-        android:id="@+id/textEmptyPantry"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:gravity="center"
-        android:text="Your pantry is empty.&#10;Add your first food item to get started!"
-        android:textSize="17sp"
-        android:textColor="#607D8B"
-        android:textAlignment="center"
-        android:visibility="gone"
-        android:padding="20dp" />
+            <EditText
+                android:id="@+id/editSearch"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Search food items..."
+                android:inputType="text"
+                android:singleLine="true"
+                android:minHeight="48dp"
+                android:layout_marginBottom="8dp" />
 
-    <!-- Pantry Food List -->
-    <ListView
-        android:id="@+id/listPantry"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:divider="#CFD8DC"
-        android:dividerHeight="1dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Sort items"
+                android:textSize="13sp"
+                android:textColor="#607D8B" />
+
+            <Spinner
+                android:id="@+id/spinnerSort"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:contentDescription="Sort food items"
+                android:layout_marginBottom="8dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Filter by expiry"
+                android:textSize="13sp"
+                android:textColor="#607D8B" />
+
+            <Spinner
+                android:id="@+id/spinnerFilter"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:contentDescription="Filter food by expiry status"
+                android:layout_marginBottom="10dp" />
+
+            <TextView
+                android:id="@+id/textEmptyPantry"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="Your pantry is empty.&#10;Add your first food item to get started!"
+                android:textSize="16sp"
+                android:textColor="#607D8B"
+                android:visibility="gone"
+                android:padding="20dp" />
+
+            <ListView
+                android:id="@+id/listPantry"
+                android:layout_width="match_parent"
+                android:layout_height="300dp"
+                android:nestedScrollingEnabled="true"
+                android:divider="#CFD8DC"
+                android:dividerHeight="1dp" />
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

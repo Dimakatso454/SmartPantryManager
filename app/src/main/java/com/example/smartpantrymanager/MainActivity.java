@@ -3,7 +3,9 @@ package com.example.smartpantrymanager;
 import android.app.AlertDialog;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.InputType;
+import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -21,14 +23,17 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText editItemName, editQuantity;
+    EditText editItemName, editQuantity, editSearch;
     Button btnAddItem;
     ListView listPantry;
 
-    ArrayList<String> pantryItems;
-    ArrayList<Integer> itemIds;
-    ArrayList<String> itemNames;
-    ArrayList<String> itemQuantities;
+    ArrayList<String> pantryItems = new ArrayList<>();
+    ArrayList<Integer> itemIds = new ArrayList<>();
+    ArrayList<String> itemNames = new ArrayList<>();
+    ArrayList<String> itemQuantities = new ArrayList<>();
+
+    ArrayList<String> displayedItems = new ArrayList<>();
+    ArrayList<Integer> displayedIds = new ArrayList<>();
 
     ArrayAdapter<String> adapter;
     DatabaseHelper databaseHelper;
@@ -60,29 +65,24 @@ public class MainActivity extends AppCompatActivity {
 
         editItemName = findViewById(R.id.editItemName);
         editQuantity = findViewById(R.id.editQuantity);
+        editSearch = findViewById(R.id.editSearch);
         btnAddItem = findViewById(R.id.btnAddItem);
         listPantry = findViewById(R.id.listPantry);
 
         databaseHelper = new DatabaseHelper(this);
 
-        pantryItems = new ArrayList<>();
-        itemIds = new ArrayList<>();
-        itemNames = new ArrayList<>();
-        itemQuantities = new ArrayList<>();
-
         adapter = new ArrayAdapter<>(
                 this,
                 android.R.layout.simple_list_item_1,
-                pantryItems
+                displayedItems
         );
 
         listPantry.setAdapter(adapter);
 
         loadItems();
 
-        // Add a food item
+        // Add food item
         btnAddItem.setOnClickListener(v -> {
-
             String name = editItemName.getText().toString().trim();
             String quantity = editQuantity.getText().toString().trim();
 
@@ -97,7 +97,6 @@ public class MainActivity extends AppCompatActivity {
 
             if (saved) {
                 loadItems();
-
                 editItemName.setText("");
                 editQuantity.setText("");
 
@@ -111,19 +110,42 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Tap an item to edit it
+        // Search food items
+        editSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(
+                    CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(
+                    CharSequence s, int start, int before, int count) {
+                filterItems(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
+
+        // Tap to edit
         listPantry.setOnItemClickListener(
                 (parent, view, position, id) -> {
-                    showEditDialog(position);
+                    int itemId = displayedIds.get(position);
+                    int originalPosition = itemIds.indexOf(itemId);
+
+                    if (originalPosition != -1) {
+                        showEditDialog(originalPosition);
+                    }
                 }
         );
 
-        // Long-press an item to delete it
+        // Long-press to delete
         listPantry.setOnItemLongClickListener(
                 (parent, view, position, id) -> {
 
-                    int itemId = itemIds.get(position);
-                    String itemName = pantryItems.get(position);
+                    int itemId = displayedIds.get(position);
+                    String itemName = displayedItems.get(position);
 
                     new AlertDialog.Builder(this)
                             .setTitle("Delete Item")
@@ -150,7 +172,26 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // Display the edit dialog
+    // Search filter
+    private void filterItems(String searchText) {
+
+        displayedItems.clear();
+        displayedIds.clear();
+
+        String query = searchText.toLowerCase().trim();
+
+        for (int i = 0; i < pantryItems.size(); i++) {
+
+            if (itemNames.get(i).toLowerCase().contains(query)) {
+                displayedItems.add(pantryItems.get(i));
+                displayedIds.add(itemIds.get(i));
+            }
+        }
+
+        adapter.notifyDataSetChanged();
+    }
+
+    // Edit food item
     private void showEditDialog(int position) {
 
         int itemId = itemIds.get(position);
@@ -167,8 +208,8 @@ public class MainActivity extends AppCompatActivity {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        int padding = (int) (20 * getResources()
-                .getDisplayMetrics().density);
+        int padding = (int) (20 *
+                getResources().getDisplayMetrics().density);
 
         layout.setPadding(padding, 0, padding, 0);
         layout.addView(nameInput);
@@ -222,7 +263,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // Load food items from SQLite
+    // Load items from SQLite
     private void loadItems() {
 
         pantryItems.clear();
@@ -253,6 +294,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        adapter.notifyDataSetChanged();
+        filterItems(editSearch.getText().toString());
     }
 }

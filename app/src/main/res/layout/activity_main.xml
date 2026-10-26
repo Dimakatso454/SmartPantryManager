@@ -122,8 +122,15 @@
         android:id="@+id/spinnerSort"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:backgroundTint="#2E7D32"
         android:contentDescription="Sort food items"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Filter Food by Expiry Status -->
+    <Spinner
+        android:id="@+id/spinnerFilter"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:contentDescription="Filter food by expiry status"
         android:layout_marginBottom="10dp" />
 
     <!-- Empty Pantry Message -->

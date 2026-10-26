@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
     EditText editItemName, editQuantity, editExpiryDate, editSearch;
     Button btnAddItem;
     ListView listPantry;
-    Spinner spinnerSort;
+    Spinner spinnerSort, spinnerFilter;
     TextView textPantrySummary, textEmptyPantry;
 
     ArrayList<String> pantryItems = new ArrayList<>();
@@ -48,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     ArrayList<String> itemNames = new ArrayList<>();
     ArrayList<String> itemQuantities = new ArrayList<>();
     ArrayList<String> itemExpiryDates = new ArrayList<>();
+    ArrayList<String> itemStatuses = new ArrayList<>();
 
     ArrayList<String> displayedItems = new ArrayList<>();
     ArrayList<Integer> displayedIds = new ArrayList<>();
@@ -92,12 +93,13 @@ public class MainActivity extends AppCompatActivity {
         btnAddItem = findViewById(R.id.btnAddItem);
         listPantry = findViewById(R.id.listPantry);
         spinnerSort = findViewById(R.id.spinnerSort);
+        spinnerFilter = findViewById(R.id.spinnerFilter);
         textPantrySummary = findViewById(R.id.textPantrySummary);
         textEmptyPantry = findViewById(R.id.textEmptyPantry);
 
         databaseHelper = new DatabaseHelper(this);
 
-        // Coloured expiry warnings
+        // Display food items with expiry colours
         adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1,
@@ -118,13 +120,10 @@ public class MainActivity extends AppCompatActivity {
 
                 if (item.endsWith("EXPIRED")) {
                     textView.setTextColor(Color.RED);
-
                 } else if (item.endsWith("EXPIRING SOON")) {
                     textView.setTextColor(Color.rgb(230, 120, 0));
-
                 } else if (item.endsWith("FRESH")) {
                     textView.setTextColor(Color.rgb(0, 130, 0));
-
                 } else {
                     textView.setTextColor(Color.DKGRAY);
                 }
@@ -143,12 +142,11 @@ public class MainActivity extends AppCompatActivity {
                 "Expiry Date (Latest First)"
         };
 
-        ArrayAdapter<String> sortAdapter =
-                new ArrayAdapter<>(
-                        this,
-                        android.R.layout.simple_spinner_item,
-                        sortOptions
-                );
+        ArrayAdapter<String> sortAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                sortOptions
+        );
 
         sortAdapter.setDropDownViewResource(
                 android.R.layout.simple_spinner_dropdown_item
@@ -174,24 +172,58 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
+        // Expiry status filter dropdown
+        String[] filterOptions = {
+                "All Items",
+                "Expired",
+                "Expiring Soon",
+                "Fresh"
+        };
+
+        ArrayAdapter<String> filterAdapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                filterOptions
+        );
+
+        filterAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        spinnerFilter.setAdapter(filterAdapter);
+
+        spinnerFilter.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id
+                    ) {
+                        filterItems(editSearch.getText().toString());
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                }
+        );
+
+        // Open calendar
         editExpiryDate.setOnClickListener(v ->
                 showDatePicker(editExpiryDate)
         );
 
         loadItems();
 
-        // Add food
+        // Add food item
         btnAddItem.setOnClickListener(v -> {
-            String name = editItemName.getText()
-                    .toString().trim();
-            String quantity = editQuantity.getText()
-                    .toString().trim();
-            String expiryDate = editExpiryDate.getText()
-                    .toString().trim();
+            String name = editItemName.getText().toString().trim();
+            String quantity = editQuantity.getText().toString().trim();
+            String expiryDate = editExpiryDate.getText().toString().trim();
 
-            if (name.isEmpty() ||
-                    quantity.isEmpty() ||
-                    expiryDate.isEmpty()) {
+            if (name.isEmpty() || quantity.isEmpty() || expiryDate.isEmpty()) {
                 Toast.makeText(
                         this,
                         "Please fill in all fields",
@@ -225,7 +257,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Search
+        // Search food
         editSearch.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(
@@ -245,7 +277,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Tap to edit
+        // Tap item to edit
         listPantry.setOnItemClickListener(
                 (parent, view, position, id) -> {
                     int itemId = displayedIds.get(position);
@@ -257,7 +289,7 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
-        // Long press to delete
+        // Long press item to delete
         listPantry.setOnItemLongClickListener(
                 (parent, view, position, id) -> {
                     int itemId = displayedIds.get(position);
@@ -290,6 +322,7 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
+    // Refresh expiry statuses when returning to app
     @Override
     protected void onResume() {
         super.onResume();
@@ -319,7 +352,7 @@ public class MainActivity extends AppCompatActivity {
         ).show();
     }
 
-    // Expiry status
+    // Check expiry status
     private String getExpiryStatus(String expiryDate) {
         if (expiryDate == null || expiryDate.trim().isEmpty()) {
             return "NO EXPIRY DATE";
@@ -367,19 +400,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Search and sort pantry items
+    // Search, filter and sort pantry items
     private void filterItems(String searchText) {
         displayedItems.clear();
         displayedIds.clear();
 
         String query = searchText.toLowerCase(Locale.ROOT).trim();
+        int selectedFilter = spinnerFilter.getSelectedItemPosition();
 
         ArrayList<Integer> matchingPositions = new ArrayList<>();
 
         for (int i = 0; i < pantryItems.size(); i++) {
-            if (itemNames.get(i)
+
+            boolean matchesSearch = itemNames.get(i)
                     .toLowerCase(Locale.ROOT)
-                    .contains(query)) {
+                    .contains(query);
+
+            String status = itemStatuses.get(i);
+
+            boolean matchesFilter =
+                    selectedFilter == 0 ||
+                            (selectedFilter == 1 && status.equals("EXPIRED")) ||
+                            (selectedFilter == 2 && status.equals("EXPIRING SOON")) ||
+                            (selectedFilter == 3 && status.equals("FRESH"));
+
+            if (matchesSearch && matchesFilter) {
                 matchingPositions.add(i);
             }
         }
@@ -415,7 +460,7 @@ public class MainActivity extends AppCompatActivity {
             displayedIds.add(itemIds.get(position));
         }
 
-        // Empty pantry and search messages
+        // Empty pantry and no results messages
         if (pantryItems.isEmpty()) {
             textEmptyPantry.setText(
                     "Your pantry is empty.\n" +
@@ -425,7 +470,9 @@ public class MainActivity extends AppCompatActivity {
             listPantry.setVisibility(View.GONE);
 
         } else if (displayedItems.isEmpty()) {
-            textEmptyPantry.setText("No matching food items found.");
+            textEmptyPantry.setText(
+                    "No matching food items found."
+            );
             textEmptyPantry.setVisibility(View.VISIBLE);
             listPantry.setVisibility(View.GONE);
 
@@ -544,6 +591,7 @@ public class MainActivity extends AppCompatActivity {
         itemNames.clear();
         itemQuantities.clear();
         itemExpiryDates.clear();
+        itemStatuses.clear();
 
         int totalItems = 0;
         int expiredItems = 0;
@@ -575,6 +623,7 @@ public class MainActivity extends AppCompatActivity {
                 itemExpiryDates.add(expiryDate);
 
                 String status = getExpiryStatus(expiryDate);
+                itemStatuses.add(status);
 
                 totalItems++;
 

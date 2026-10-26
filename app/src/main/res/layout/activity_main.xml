@@ -117,6 +117,15 @@
         android:minHeight="48dp"
         android:layout_marginBottom="10dp" />
 
+    <!-- Sort Food Items -->
+    <Spinner
+        android:id="@+id/spinnerSort"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:backgroundTint="#2E7D32"
+        android:contentDescription="Sort food items"
+        android:layout_marginBottom="10dp" />
+
     <!-- Empty Pantry Message -->
     <TextView
         android:id="@+id/textEmptyPantry"

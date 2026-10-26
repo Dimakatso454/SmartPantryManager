@@ -11,11 +11,13 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,6 +31,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 import java.util.Locale;
 
@@ -37,6 +40,7 @@ public class MainActivity extends AppCompatActivity {
     EditText editItemName, editQuantity, editExpiryDate, editSearch;
     Button btnAddItem;
     ListView listPantry;
+    Spinner spinnerSort;
     TextView textPantrySummary, textEmptyPantry;
 
     ArrayList<String> pantryItems = new ArrayList<>();
@@ -61,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
         ViewCompat.setOnApplyWindowInsetsListener(
                 findViewById(R.id.main),
                 (v, insets) -> {
-
                     Insets bars = insets.getInsets(
                             WindowInsetsCompat.Type.systemBars()
                     );
@@ -88,12 +91,13 @@ public class MainActivity extends AppCompatActivity {
         editSearch = findViewById(R.id.editSearch);
         btnAddItem = findViewById(R.id.btnAddItem);
         listPantry = findViewById(R.id.listPantry);
+        spinnerSort = findViewById(R.id.spinnerSort);
         textPantrySummary = findViewById(R.id.textPantrySummary);
         textEmptyPantry = findViewById(R.id.textEmptyPantry);
 
         databaseHelper = new DatabaseHelper(this);
 
-        // Display food items with expiry colours
+        // Coloured expiry warnings
         adapter = new ArrayAdapter<String>(
                 this,
                 android.R.layout.simple_list_item_1,
@@ -105,7 +109,6 @@ public class MainActivity extends AppCompatActivity {
                     View convertView,
                     ViewGroup parent
             ) {
-
                 View view = super.getView(
                         position, convertView, parent
                 );
@@ -117,14 +120,10 @@ public class MainActivity extends AppCompatActivity {
                     textView.setTextColor(Color.RED);
 
                 } else if (item.endsWith("EXPIRING SOON")) {
-                    textView.setTextColor(
-                            Color.rgb(230, 120, 0)
-                    );
+                    textView.setTextColor(Color.rgb(230, 120, 0));
 
                 } else if (item.endsWith("FRESH")) {
-                    textView.setTextColor(
-                            Color.rgb(0, 130, 0)
-                    );
+                    textView.setTextColor(Color.rgb(0, 130, 0));
 
                 } else {
                     textView.setTextColor(Color.DKGRAY);
@@ -136,35 +135,68 @@ public class MainActivity extends AppCompatActivity {
 
         listPantry.setAdapter(adapter);
 
-        // Open calendar when expiry field is tapped
+        // Sorting dropdown
+        String[] sortOptions = {
+                "Sort by Name (A-Z)",
+                "Sort by Name (Z-A)",
+                "Expiry Date (Earliest First)",
+                "Expiry Date (Latest First)"
+        };
+
+        ArrayAdapter<String> sortAdapter =
+                new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_spinner_item,
+                        sortOptions
+                );
+
+        sortAdapter.setDropDownViewResource(
+                android.R.layout.simple_spinner_dropdown_item
+        );
+
+        spinnerSort.setAdapter(sortAdapter);
+
+        spinnerSort.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent,
+                            View view,
+                            int position,
+                            long id
+                    ) {
+                        filterItems(editSearch.getText().toString());
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                    }
+                }
+        );
+
         editExpiryDate.setOnClickListener(v ->
                 showDatePicker(editExpiryDate)
         );
 
         loadItems();
 
-        // Add a food item
+        // Add food
         btnAddItem.setOnClickListener(v -> {
-
             String name = editItemName.getText()
                     .toString().trim();
-
             String quantity = editQuantity.getText()
                     .toString().trim();
-
             String expiryDate = editExpiryDate.getText()
                     .toString().trim();
 
             if (name.isEmpty() ||
                     quantity.isEmpty() ||
                     expiryDate.isEmpty()) {
-
                 Toast.makeText(
                         this,
                         "Please fill in all fields",
                         Toast.LENGTH_SHORT
                 ).show();
-
                 return;
             }
 
@@ -173,7 +205,6 @@ public class MainActivity extends AppCompatActivity {
             );
 
             if (saved) {
-
                 loadItems();
 
                 editItemName.setText("");
@@ -185,9 +216,7 @@ public class MainActivity extends AppCompatActivity {
                         "Item saved successfully",
                         Toast.LENGTH_SHORT
                 ).show();
-
             } else {
-
                 Toast.makeText(
                         this,
                         "Failed to save item",
@@ -196,44 +225,31 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Search food items
-        editSearch.addTextChangedListener(
-                new TextWatcher() {
+        // Search
+        editSearch.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(
+                    CharSequence s, int start, int count, int after
+            ) {
+            }
 
-                    @Override
-                    public void beforeTextChanged(
-                            CharSequence s,
-                            int start,
-                            int count,
-                            int after
-                    ) {
-                    }
+            @Override
+            public void onTextChanged(
+                    CharSequence s, int start, int before, int count
+            ) {
+                filterItems(s.toString());
+            }
 
-                    @Override
-                    public void onTextChanged(
-                            CharSequence s,
-                            int start,
-                            int before,
-                            int count
-                    ) {
+            @Override
+            public void afterTextChanged(Editable s) {
+            }
+        });
 
-                        filterItems(s.toString());
-                    }
-
-                    @Override
-                    public void afterTextChanged(Editable s) {
-                    }
-                }
-        );
-
-        // Tap food item to edit
+        // Tap to edit
         listPantry.setOnItemClickListener(
                 (parent, view, position, id) -> {
-
                     int itemId = displayedIds.get(position);
-
-                    int originalPosition =
-                            itemIds.indexOf(itemId);
+                    int originalPosition = itemIds.indexOf(itemId);
 
                     if (originalPosition != -1) {
                         showEditDialog(originalPosition);
@@ -241,47 +257,31 @@ public class MainActivity extends AppCompatActivity {
                 }
         );
 
-        // Long-press food item to delete
+        // Long press to delete
         listPantry.setOnItemLongClickListener(
                 (parent, view, position, id) -> {
-
                     int itemId = displayedIds.get(position);
                     String itemName = displayedItems.get(position);
 
                     new AlertDialog.Builder(this)
                             .setTitle("Delete Item")
-                            .setMessage(
-                                    "Delete " + itemName + "?"
-                            )
-                            .setPositiveButton(
-                                    "Delete",
-                                    (dialog, which) -> {
-
-                                        boolean deleted =
-                                                databaseHelper.deleteItem(
-                                                        itemId
-                                                );
-
-                                        if (deleted) {
-
-                                            loadItems();
-
-                                            Toast.makeText(
-                                                    this,
-                                                    "Item deleted",
-                                                    Toast.LENGTH_SHORT
-                                            ).show();
-
-                                        } else {
-
-                                            Toast.makeText(
-                                                    this,
-                                                    "Failed to delete item",
-                                                    Toast.LENGTH_SHORT
-                                            ).show();
-                                        }
-                                    }
-                            )
+                            .setMessage("Delete " + itemName + "?")
+                            .setPositiveButton("Delete", (dialog, which) -> {
+                                if (databaseHelper.deleteItem(itemId)) {
+                                    loadItems();
+                                    Toast.makeText(
+                                            this,
+                                            "Item deleted",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                } else {
+                                    Toast.makeText(
+                                            this,
+                                            "Failed to delete item",
+                                            Toast.LENGTH_SHORT
+                                    ).show();
+                                }
+                            })
                             .setNegativeButton("Cancel", null)
                             .show();
 
@@ -290,7 +290,6 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // Refresh expiry warnings when app opens again
     @Override
     protected void onResume() {
         super.onResume();
@@ -300,52 +299,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Display calendar
+    // Calendar
     private void showDatePicker(EditText dateField) {
-
         Calendar calendar = Calendar.getInstance();
 
-        DatePickerDialog datePicker =
-                new DatePickerDialog(
-                        this,
-                        (view, year, month, dayOfMonth) -> {
-
-                            String selectedDate =
-                                    String.format(
-                                            Locale.US,
-                                            "%04d-%02d-%02d",
-                                            year,
-                                            month + 1,
-                                            dayOfMonth
-                                    );
-
-                            dateField.setText(selectedDate);
-                        },
-                        calendar.get(Calendar.YEAR),
-                        calendar.get(Calendar.MONTH),
-                        calendar.get(Calendar.DAY_OF_MONTH)
-                );
-
-        datePicker.show();
+        new DatePickerDialog(
+                this,
+                (view, year, month, day) -> {
+                    String date = String.format(
+                            Locale.US,
+                            "%04d-%02d-%02d",
+                            year, month + 1, day
+                    );
+                    dateField.setText(date);
+                },
+                calendar.get(Calendar.YEAR),
+                calendar.get(Calendar.MONTH),
+                calendar.get(Calendar.DAY_OF_MONTH)
+        ).show();
     }
 
-    // Check expiry status
+    // Expiry status
     private String getExpiryStatus(String expiryDate) {
-
-        if (expiryDate == null ||
-                expiryDate.trim().isEmpty()) {
-
+        if (expiryDate == null || expiryDate.trim().isEmpty()) {
             return "NO EXPIRY DATE";
         }
 
         try {
-
             SimpleDateFormat format =
-                    new SimpleDateFormat(
-                            "yyyy-MM-dd",
-                            Locale.US
-                    );
-
+                    new SimpleDateFormat("yyyy-MM-dd", Locale.US);
             format.setLenient(false);
 
             Date expiry = format.parse(expiryDate);
@@ -371,9 +353,7 @@ public class MainActivity extends AppCompatActivity {
                 return "EXPIRED";
             }
 
-            Calendar warningDate =
-                    (Calendar) today.clone();
-
+            Calendar warningDate = (Calendar) today.clone();
             warningDate.add(Calendar.DAY_OF_YEAR, 3);
 
             if (!expiryCalendar.after(warningDate)) {
@@ -383,55 +363,73 @@ public class MainActivity extends AppCompatActivity {
             return "FRESH";
 
         } catch (ParseException e) {
-
             return "INVALID DATE";
         }
     }
 
-    // Filter pantry items by name
+    // Search and sort pantry items
     private void filterItems(String searchText) {
-
         displayedItems.clear();
         displayedIds.clear();
 
-        String query = searchText
-                .toLowerCase(Locale.ROOT)
-                .trim();
+        String query = searchText.toLowerCase(Locale.ROOT).trim();
+
+        ArrayList<Integer> matchingPositions = new ArrayList<>();
 
         for (int i = 0; i < pantryItems.size(); i++) {
-
             if (itemNames.get(i)
                     .toLowerCase(Locale.ROOT)
                     .contains(query)) {
-
-                displayedItems.add(pantryItems.get(i));
-                displayedIds.add(itemIds.get(i));
+                matchingPositions.add(i);
             }
         }
 
-        // Show message if pantry is empty
-        if (pantryItems.isEmpty()) {
+        int sortType = spinnerSort.getSelectedItemPosition();
 
+        Collections.sort(matchingPositions, (a, b) -> {
+            switch (sortType) {
+                case 1:
+                    return itemNames.get(b)
+                            .compareToIgnoreCase(itemNames.get(a));
+
+                case 2:
+                    return compareExpiryDates(
+                            itemExpiryDates.get(a),
+                            itemExpiryDates.get(b)
+                    );
+
+                case 3:
+                    return compareExpiryDates(
+                            itemExpiryDates.get(b),
+                            itemExpiryDates.get(a)
+                    );
+
+                default:
+                    return itemNames.get(a)
+                            .compareToIgnoreCase(itemNames.get(b));
+            }
+        });
+
+        for (int position : matchingPositions) {
+            displayedItems.add(pantryItems.get(position));
+            displayedIds.add(itemIds.get(position));
+        }
+
+        // Empty pantry and search messages
+        if (pantryItems.isEmpty()) {
             textEmptyPantry.setText(
                     "Your pantry is empty.\n" +
                             "Add your first food item to get started!"
             );
-
             textEmptyPantry.setVisibility(View.VISIBLE);
             listPantry.setVisibility(View.GONE);
 
         } else if (displayedItems.isEmpty()) {
-
-            // Show message if search has no results
-            textEmptyPantry.setText(
-                    "No matching food items found."
-            );
-
+            textEmptyPantry.setText("No matching food items found.");
             textEmptyPantry.setVisibility(View.VISIBLE);
             listPantry.setVisibility(View.GONE);
 
         } else {
-
             textEmptyPantry.setVisibility(View.GONE);
             listPantry.setVisibility(View.VISIBLE);
         }
@@ -439,9 +437,20 @@ public class MainActivity extends AppCompatActivity {
         adapter.notifyDataSetChanged();
     }
 
-    // Edit an existing food item
-    private void showEditDialog(int position) {
+    // Compare expiry dates
+    private int compareExpiryDates(String date1, String date2) {
+        boolean empty1 = date1 == null || date1.trim().isEmpty();
+        boolean empty2 = date2 == null || date2.trim().isEmpty();
 
+        if (empty1 && empty2) return 0;
+        if (empty1) return 1;
+        if (empty2) return -1;
+
+        return date1.compareTo(date2);
+    }
+
+    // Edit food item
+    private void showEditDialog(int position) {
         int itemId = itemIds.get(position);
 
         EditText nameInput = new EditText(this);
@@ -450,9 +459,7 @@ public class MainActivity extends AppCompatActivity {
 
         EditText quantityInput = new EditText(this);
         quantityInput.setHint("Quantity");
-        quantityInput.setInputType(
-                InputType.TYPE_CLASS_NUMBER
-        );
+        quantityInput.setInputType(InputType.TYPE_CLASS_NUMBER);
         quantityInput.setText(itemQuantities.get(position));
 
         EditText expiryInput = new EditText(this);
@@ -460,7 +467,6 @@ public class MainActivity extends AppCompatActivity {
         expiryInput.setText(itemExpiryDates.get(position));
         expiryInput.setFocusable(false);
         expiryInput.setClickable(true);
-
         expiryInput.setOnClickListener(v ->
                 showDatePicker(expiryInput)
         );
@@ -469,88 +475,70 @@ public class MainActivity extends AppCompatActivity {
         layout.setOrientation(LinearLayout.VERTICAL);
 
         int padding = (int) (
-                20 * getResources()
-                        .getDisplayMetrics().density
+                20 * getResources().getDisplayMetrics().density
         );
-
         layout.setPadding(padding, 0, padding, 0);
 
         layout.addView(nameInput);
         layout.addView(quantityInput);
         layout.addView(expiryInput);
 
-        AlertDialog dialog =
-                new AlertDialog.Builder(this)
-                        .setTitle("Edit Food Item")
-                        .setView(layout)
-                        .setPositiveButton("Save", null)
-                        .setNegativeButton("Cancel", null)
-                        .create();
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("Edit Food Item")
+                .setView(layout)
+                .setPositiveButton("Save", null)
+                .setNegativeButton("Cancel", null)
+                .create();
 
         dialog.setOnShowListener(d -> {
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE)
+                    .setOnClickListener(v -> {
+                        String newName = nameInput.getText()
+                                .toString().trim();
+                        String newQuantity = quantityInput.getText()
+                                .toString().trim();
+                        String newExpiry = expiryInput.getText()
+                                .toString().trim();
 
-            dialog.getButton(
-                    AlertDialog.BUTTON_POSITIVE
-            ).setOnClickListener(v -> {
+                        if (newName.isEmpty() || newQuantity.isEmpty()) {
+                            Toast.makeText(
+                                    this,
+                                    "Please enter name and quantity",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
 
-                String newName = nameInput.getText()
-                        .toString().trim();
-
-                String newQuantity = quantityInput.getText()
-                        .toString().trim();
-
-                String newExpiry = expiryInput.getText()
-                        .toString().trim();
-
-                if (newName.isEmpty() ||
-                        newQuantity.isEmpty()) {
-
-                    Toast.makeText(
-                            this,
-                            "Please enter name and quantity",
-                            Toast.LENGTH_SHORT
-                    ).show();
-
-                    return;
-                }
-
-                boolean updated =
-                        databaseHelper.updateItem(
+                        boolean updated = databaseHelper.updateItem(
                                 itemId,
                                 newName,
                                 newQuantity,
                                 newExpiry
                         );
 
-                if (updated) {
-
-                    loadItems();
-
-                    Toast.makeText(
-                            this,
-                            "Item updated successfully",
-                            Toast.LENGTH_SHORT
-                    ).show();
-
-                    dialog.dismiss();
-
-                } else {
-
-                    Toast.makeText(
-                            this,
-                            "Failed to update item",
-                            Toast.LENGTH_SHORT
-                    ).show();
-                }
-            });
+                        if (updated) {
+                            loadItems();
+                            Toast.makeText(
+                                    this,
+                                    "Item updated successfully",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            dialog.dismiss();
+                        } else {
+                            Toast.makeText(
+                                    this,
+                                    "Failed to update item",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                        }
+                    });
         });
 
         dialog.show();
     }
 
-    // Load pantry items and update summary
+    // Load food items and update summary
     private void loadItems() {
-
         pantryItems.clear();
         itemIds.clear();
         itemNames.clear();
@@ -563,21 +551,16 @@ public class MainActivity extends AppCompatActivity {
         int freshItems = 0;
 
         try (Cursor cursor = databaseHelper.getAllItems()) {
-
             while (cursor.moveToNext()) {
-
                 int id = cursor.getInt(
                         cursor.getColumnIndexOrThrow("_id")
                 );
-
                 String name = cursor.getString(
                         cursor.getColumnIndexOrThrow("name")
                 );
-
                 String quantity = cursor.getString(
                         cursor.getColumnIndexOrThrow("quantity")
                 );
-
                 String expiryDate = cursor.getString(
                         cursor.getColumnIndexOrThrow("expiry_date")
                 );
@@ -597,10 +580,8 @@ public class MainActivity extends AppCompatActivity {
 
                 if (status.equals("EXPIRED")) {
                     expiredItems++;
-
                 } else if (status.equals("EXPIRING SOON")) {
                     expiringSoonItems++;
-
                 } else if (status.equals("FRESH")) {
                     freshItems++;
                 }
@@ -612,12 +593,10 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 displayText += " | " + status;
-
                 pantryItems.add(displayText);
             }
         }
 
-        // Update Pantry Summary
         textPantrySummary.setText(
                 "Total Items: " + totalItems +
                         "\nExpired: " + expiredItems +
@@ -625,7 +604,6 @@ public class MainActivity extends AppCompatActivity {
                         " | Fresh: " + freshItems
         );
 
-        // Refresh list and empty message
         filterItems(editSearch.getText().toString());
     }
 }

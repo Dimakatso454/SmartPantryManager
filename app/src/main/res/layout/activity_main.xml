@@ -40,6 +40,17 @@
         android:inputType="number"
         android:minHeight="48dp" />
 
+    <!-- Expiry date field -->
+    <EditText
+        android:id="@+id/editExpiryDate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Expiry Date (YYYY-MM-DD)"
+        android:inputType="date"
+        android:focusable="false"
+        android:clickable="true"
+        android:minHeight="48dp" />
+
     <Button
         android:id="@+id/btnAddItem"
         android:layout_width="match_parent"

@@ -9,7 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "SmartPantry.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -20,27 +20,40 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.execSQL("CREATE TABLE pantry (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, " +
-                "quantity TEXT)");
+                "quantity TEXT, " +
+                "expiry_date TEXT)");
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db,
                           int oldVersion, int newVersion) {
-        db.execSQL("DROP TABLE IF EXISTS pantry");
-        onCreate(db);
+
+        if (oldVersion < 2) {
+            db.execSQL(
+                    "ALTER TABLE pantry ADD COLUMN expiry_date TEXT"
+            );
+        }
     }
 
     // Add a food item
-    public boolean addItem(String name, String quantity) {
+    public boolean addItem(String name, String quantity,
+                           String expiryDate) {
+
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
         values.put("name", name);
         values.put("quantity", quantity);
+        values.put("expiry_date", expiryDate);
 
         long result = db.insert("pantry", null, values);
 
         return result != -1;
+    }
+
+    // Keep the old add method working
+    public boolean addItem(String name, String quantity) {
+        return addItem(name, quantity, "");
     }
 
     // Get all saved food items
@@ -48,7 +61,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getReadableDatabase();
 
         return db.rawQuery(
-                "SELECT id AS _id, name, quantity FROM pantry",
+                "SELECT id AS _id, name, quantity, expiry_date FROM pantry",
                 null
         );
     }
@@ -67,6 +80,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     }
 
     // Update an existing food item
+    public boolean updateItem(int id, String name,
+                              String quantity, String expiryDate) {
+
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        ContentValues values = new ContentValues();
+        values.put("name", name);
+        values.put("quantity", quantity);
+        values.put("expiry_date", expiryDate);
+
+        int result = db.update(
+                "pantry",
+                values,
+                "id = ?",
+                new String[]{String.valueOf(id)}
+        );
+
+        return result > 0;
+    }
+
+    // Keep the old update method working
     public boolean updateItem(int id, String name, String quantity) {
         SQLiteDatabase db = this.getWritableDatabase();
 

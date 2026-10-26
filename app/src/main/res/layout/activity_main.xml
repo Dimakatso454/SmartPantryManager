@@ -14,7 +14,7 @@
         android:textSize="24sp"
         android:textStyle="bold"
         android:gravity="center"
-        android:layout_marginBottom="20dp" />
+        android:layout_marginBottom="15dp" />
 
     <TextView
         android:layout_width="match_parent"
@@ -24,6 +24,20 @@
         android:textStyle="bold"
         android:layout_marginBottom="10dp" />
 
+    <!-- Pantry Summary -->
+    <TextView
+        android:id="@+id/textPantrySummary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Total Items: 0 | Expired: 0 | Expiring Soon: 0 | Fresh: 0"
+        android:textSize="15sp"
+        android:textStyle="bold"
+        android:padding="12dp"
+        android:background="#E8F5E9"
+        android:textColor="#1B5E20"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Food Name -->
     <EditText
         android:id="@+id/editItemName"
         android:layout_width="match_parent"
@@ -32,6 +46,7 @@
         android:inputType="textCapWords"
         android:minHeight="48dp" />
 
+    <!-- Quantity -->
     <EditText
         android:id="@+id/editQuantity"
         android:layout_width="match_parent"
@@ -40,7 +55,7 @@
         android:inputType="number"
         android:minHeight="48dp" />
 
-    <!-- Expiry date field -->
+    <!-- Expiry Date -->
     <EditText
         android:id="@+id/editExpiryDate"
         android:layout_width="match_parent"
@@ -51,13 +66,14 @@
         android:clickable="true"
         android:minHeight="48dp" />
 
+    <!-- Add Button -->
     <Button
         android:id="@+id/btnAddItem"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/add_item" />
 
-    <!-- Search food items -->
+    <!-- Search -->
     <EditText
         android:id="@+id/editSearch"
         android:layout_width="match_parent"
@@ -67,6 +83,7 @@
         android:minHeight="48dp"
         android:layout_marginTop="15dp" />
 
+    <!-- Pantry List -->
     <ListView
         android:id="@+id/listPantry"
         android:layout_width="match_parent"

@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     EditText editItemName, editQuantity, editExpiryDate, editSearch;
     Button btnAddItem;
     ListView listPantry;
+    TextView textPantrySummary;
 
     ArrayList<String> pantryItems = new ArrayList<>();
     ArrayList<Integer> itemIds = new ArrayList<>();
@@ -65,11 +66,16 @@ public class MainActivity extends AppCompatActivity {
                             WindowInsetsCompat.Type.systemBars()
                     );
 
+                    int padding = (int) (
+                            20 * getResources()
+                                    .getDisplayMetrics().density
+                    );
+
                     v.setPadding(
-                            bars.left + 20,
-                            bars.top + 20,
-                            bars.right + 20,
-                            bars.bottom + 20
+                            bars.left + padding,
+                            bars.top + padding,
+                            bars.right + padding,
+                            bars.bottom + padding
                     );
 
                     return insets;
@@ -82,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
         editSearch = findViewById(R.id.editSearch);
         btnAddItem = findViewById(R.id.btnAddItem);
         listPantry = findViewById(R.id.listPantry);
+        textPantrySummary = findViewById(R.id.textPantrySummary);
 
         databaseHelper = new DatabaseHelper(this);
 
@@ -92,9 +99,11 @@ public class MainActivity extends AppCompatActivity {
                 displayedItems
         ) {
             @Override
-            public View getView(int position,
-                                View convertView,
-                                ViewGroup parent) {
+            public View getView(
+                    int position,
+                    View convertView,
+                    ViewGroup parent
+            ) {
 
                 View view = super.getView(
                         position, convertView, parent
@@ -195,7 +204,8 @@ public class MainActivity extends AppCompatActivity {
                             CharSequence s,
                             int start,
                             int count,
-                            int after) {
+                            int after
+                    ) {
                     }
 
                     @Override
@@ -203,7 +213,8 @@ public class MainActivity extends AppCompatActivity {
                             CharSequence s,
                             int start,
                             int before,
-                            int count) {
+                            int count
+                    ) {
 
                         filterItems(s.toString());
                     }
@@ -355,16 +366,7 @@ public class MainActivity extends AppCompatActivity {
             expiryCalendar.set(Calendar.SECOND, 0);
             expiryCalendar.set(Calendar.MILLISECOND, 0);
 
-            // Compare calendar dates
-            long todayDay =
-                    today.get(Calendar.YEAR) * 1000L +
-                            today.get(Calendar.DAY_OF_YEAR);
-
-            long expiryDay =
-                    expiryCalendar.get(Calendar.YEAR) * 1000L +
-                            expiryCalendar.get(Calendar.DAY_OF_YEAR);
-
-            if (expiryDay < todayDay) {
+            if (expiryCalendar.before(today)) {
                 return "EXPIRED";
             }
 
@@ -518,7 +520,7 @@ public class MainActivity extends AppCompatActivity {
         dialog.show();
     }
 
-    // Load pantry items from SQLite
+    // Load pantry items and update summary
     private void loadItems() {
 
         pantryItems.clear();
@@ -526,6 +528,11 @@ public class MainActivity extends AppCompatActivity {
         itemNames.clear();
         itemQuantities.clear();
         itemExpiryDates.clear();
+
+        int totalItems = 0;
+        int expiredItems = 0;
+        int expiringSoonItems = 0;
+        int freshItems = 0;
 
         try (Cursor cursor = databaseHelper.getAllItems()) {
 
@@ -556,23 +563,41 @@ public class MainActivity extends AppCompatActivity {
                 itemQuantities.add(quantity);
                 itemExpiryDates.add(expiryDate);
 
-                String displayText =
-                        name + " - " + quantity;
+                String status = getExpiryStatus(expiryDate);
 
-                if (!expiryDate.isEmpty()) {
-                    displayText +=
-                            " | Expiry: " + expiryDate;
+                totalItems++;
+
+                if (status.equals("EXPIRED")) {
+                    expiredItems++;
+
+                } else if (status.equals("EXPIRING SOON")) {
+                    expiringSoonItems++;
+
+                } else if (status.equals("FRESH")) {
+                    freshItems++;
                 }
 
-                displayText +=
-                        " | " + getExpiryStatus(expiryDate);
+                String displayText = name + " - " + quantity;
+
+                if (!expiryDate.isEmpty()) {
+                    displayText += " | Expiry: " + expiryDate;
+                }
+
+                displayText += " | " + status;
 
                 pantryItems.add(displayText);
             }
         }
 
-        filterItems(
-                editSearch.getText().toString()
+        // Update the Pantry Summary
+        textPantrySummary.setText(
+                "Total Items: " + totalItems +
+                        "\nExpired: " + expiredItems +
+                        " | Expiring Soon: " + expiringSoonItems +
+                        " | Fresh: " + freshItems
         );
+
+        // Refresh the list while keeping the search active
+        filterItems(editSearch.getText().toString());
     }
 }

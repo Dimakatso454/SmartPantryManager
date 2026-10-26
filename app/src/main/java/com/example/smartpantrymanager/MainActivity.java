@@ -118,11 +118,11 @@ public class MainActivity extends AppCompatActivity {
                 TextView textView = (TextView) view;
                 String item = displayedItems.get(position);
 
-                if (item.endsWith("EXPIRED")) {
+                if (item.contains(" | EXPIRED |")) {
                     textView.setTextColor(Color.RED);
-                } else if (item.endsWith("EXPIRING SOON")) {
+                } else if (item.contains(" | EXPIRING SOON |")) {
                     textView.setTextColor(Color.rgb(230, 120, 0));
-                } else if (item.endsWith("FRESH")) {
+                } else if (item.contains(" | FRESH |")) {
                     textView.setTextColor(Color.rgb(0, 130, 0));
                 } else {
                     textView.setTextColor(Color.DKGRAY);
@@ -232,6 +232,15 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
+            if (!isValidQuantity(quantity)) {
+                Toast.makeText(
+                        this,
+                        "Please enter a valid quantity (0 or more)",
+                        Toast.LENGTH_SHORT
+                ).show();
+                return;
+            }
+
             boolean saved = databaseHelper.addItem(
                     name, quantity, expiryDate
             );
@@ -322,7 +331,6 @@ public class MainActivity extends AppCompatActivity {
         );
     }
 
-    // Refresh expiry statuses when returning to app
     @Override
     protected void onResume() {
         super.onResume();
@@ -332,7 +340,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // Calendar
+    // Select expiry date
     private void showDatePicker(EditText dateField) {
         Calendar calendar = Calendar.getInstance();
 
@@ -350,6 +358,33 @@ public class MainActivity extends AppCompatActivity {
                 calendar.get(Calendar.MONTH),
                 calendar.get(Calendar.DAY_OF_MONTH)
         ).show();
+    }
+
+    // NEW: Check food stock status
+    private String getStockStatus(String quantity) {
+        try {
+            int amount = Integer.parseInt(quantity.trim());
+
+            if (amount <= 0) {
+                return "OUT OF STOCK";
+            } else if (amount <= 2) {
+                return "LOW STOCK";
+            } else {
+                return "IN STOCK";
+            }
+
+        } catch (NumberFormatException e) {
+            return "UNKNOWN STOCK";
+        }
+    }
+
+    // Check that quantity is a valid non-negative number
+    private boolean isValidQuantity(String quantity) {
+        try {
+            return Integer.parseInt(quantity.trim()) >= 0;
+        } catch (NumberFormatException e) {
+            return false;
+        }
     }
 
     // Check expiry status
@@ -460,7 +495,6 @@ public class MainActivity extends AppCompatActivity {
             displayedIds.add(itemIds.get(position));
         }
 
-        // Empty pantry and no results messages
         if (pantryItems.isEmpty()) {
             textEmptyPantry.setText(
                     "Your pantry is empty.\n" +
@@ -556,6 +590,15 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
+                        if (!isValidQuantity(newQuantity)) {
+                            Toast.makeText(
+                                    this,
+                                    "Please enter a valid quantity (0 or more)",
+                                    Toast.LENGTH_SHORT
+                            ).show();
+                            return;
+                        }
+
                         boolean updated = databaseHelper.updateItem(
                                 itemId,
                                 newName,
@@ -597,6 +640,8 @@ public class MainActivity extends AppCompatActivity {
         int expiredItems = 0;
         int expiringSoonItems = 0;
         int freshItems = 0;
+        int lowStockItems = 0;
+        int outOfStockItems = 0;
 
         try (Cursor cursor = databaseHelper.getAllItems()) {
             while (cursor.moveToNext()) {
@@ -623,8 +668,9 @@ public class MainActivity extends AppCompatActivity {
                 itemExpiryDates.add(expiryDate);
 
                 String status = getExpiryStatus(expiryDate);
-                itemStatuses.add(status);
+                String stockStatus = getStockStatus(quantity);
 
+                itemStatuses.add(status);
                 totalItems++;
 
                 if (status.equals("EXPIRED")) {
@@ -635,6 +681,12 @@ public class MainActivity extends AppCompatActivity {
                     freshItems++;
                 }
 
+                if (stockStatus.equals("LOW STOCK")) {
+                    lowStockItems++;
+                } else if (stockStatus.equals("OUT OF STOCK")) {
+                    outOfStockItems++;
+                }
+
                 String displayText = name + " - " + quantity;
 
                 if (!expiryDate.isEmpty()) {
@@ -642,6 +694,8 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 displayText += " | " + status;
+                displayText += " | " + stockStatus;
+
                 pantryItems.add(displayText);
             }
         }
@@ -650,7 +704,9 @@ public class MainActivity extends AppCompatActivity {
                 "Total Items: " + totalItems +
                         "\nExpired: " + expiredItems +
                         " | Expiring Soon: " + expiringSoonItems +
-                        " | Fresh: " + freshItems
+                        " | Fresh: " + freshItems +
+                        "\nLow Stock: " + lowStockItems +
+                        " | Out of Stock: " + outOfStockItems
         );
 
         filterItems(editSearch.getText().toString());

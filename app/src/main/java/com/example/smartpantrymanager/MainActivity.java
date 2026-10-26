@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
     EditText editItemName, editQuantity, editExpiryDate, editSearch;
     Button btnAddItem;
     ListView listPantry;
-    TextView textPantrySummary;
+    TextView textPantrySummary, textEmptyPantry;
 
     ArrayList<String> pantryItems = new ArrayList<>();
     ArrayList<Integer> itemIds = new ArrayList<>();
@@ -89,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
         btnAddItem = findViewById(R.id.btnAddItem);
         listPantry = findViewById(R.id.listPantry);
         textPantrySummary = findViewById(R.id.textPantrySummary);
+        textEmptyPantry = findViewById(R.id.textEmptyPantry);
 
         databaseHelper = new DatabaseHelper(this);
 
@@ -408,6 +409,33 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        // Show message if pantry is empty
+        if (pantryItems.isEmpty()) {
+
+            textEmptyPantry.setText(
+                    "Your pantry is empty.\n" +
+                            "Add your first food item to get started!"
+            );
+
+            textEmptyPantry.setVisibility(View.VISIBLE);
+            listPantry.setVisibility(View.GONE);
+
+        } else if (displayedItems.isEmpty()) {
+
+            // Show message if search has no results
+            textEmptyPantry.setText(
+                    "No matching food items found."
+            );
+
+            textEmptyPantry.setVisibility(View.VISIBLE);
+            listPantry.setVisibility(View.GONE);
+
+        } else {
+
+            textEmptyPantry.setVisibility(View.GONE);
+            listPantry.setVisibility(View.VISIBLE);
+        }
+
         adapter.notifyDataSetChanged();
     }
 
@@ -589,7 +617,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        // Update the Pantry Summary
+        // Update Pantry Summary
         textPantrySummary.setText(
                 "Total Items: " + totalItems +
                         "\nExpired: " + expiredItems +
@@ -597,7 +625,7 @@ public class MainActivity extends AppCompatActivity {
                         " | Fresh: " + freshItems
         );
 
-        // Refresh the list while keeping the search active
+        // Refresh list and empty message
         filterItems(editSearch.getText().toString());
     }
 }

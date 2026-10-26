@@ -19,6 +19,7 @@
         android:gravity="center"
         android:layout_marginBottom="6dp" />
 
+    <!-- App Description -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -115,6 +116,20 @@
         android:singleLine="true"
         android:minHeight="48dp"
         android:layout_marginBottom="10dp" />
+
+    <!-- Empty Pantry Message -->
+    <TextView
+        android:id="@+id/textEmptyPantry"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="Your pantry is empty.&#10;Add your first food item to get started!"
+        android:textSize="17sp"
+        android:textColor="#607D8B"
+        android:textAlignment="center"
+        android:visibility="gone"
+        android:padding="20dp" />
 
     <!-- Pantry Food List -->
     <ListView

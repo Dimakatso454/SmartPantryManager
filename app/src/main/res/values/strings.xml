@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">SmartPantryManager</string>
+    <string name="pantry_title">Smart Pantry Manager</string>
+    <string name="my_pantry">My Pantry</string>
+    <string name="enter_food">Enter food item</string>
+    <string name="enter_quantity">Enter quantity</string>
+    <string name="add_item">Add Item</string>
 </resources>
